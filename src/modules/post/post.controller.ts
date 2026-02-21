@@ -1,5 +1,6 @@
 import { Request, Response } from "express"
 import { postService } from "./post.service"
+import paginationSortingHelper from "../../helpers/paginationSortingHelper";
 
 // create post
 const createPost = async (req:Request, res:Response) => {
@@ -56,7 +57,9 @@ const getAllPost = async (req: Request, res: Response) => {
             .filter(t => t.length > 0)
         : [];
 
-    const result = await postService.getAllPost({ search, tags });
+    // pagination & sorting
+    const {page, limit, skip, sortBy, sortOrder} = paginationSortingHelper(req.query) 
+    const result = await postService.getAllPost({ search, tags, page, limit, skip, sortBy, sortOrder});
     res.status(200).json(result);
   } catch (e: any) {
     res.status(400).json({
@@ -68,7 +71,24 @@ const getAllPost = async (req: Request, res: Response) => {
 };
 
 
+const getPostById = async (req:Request, res: Response) => {
+  try {
+    const {postId} = req.params;
+    if(!postId){
+      throw new Error("Post Id is required")
+    }
+    const result = await postService.getPostById(postId);
+    res.status(200).json(result)
+  } catch (e) {
+  res.status(400).json({
+    error: "post create failed",
+    details: e
+  })
+}
+}
+
 export const postController = {
   createPost,
-  getAllPost
+  getAllPost,
+  getPostById
 }
